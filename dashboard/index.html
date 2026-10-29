@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HyperDrop — Last-Mile AI Voice Delivery Coordinator</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <!-- Header & KPI Bar -->
+  <header>
+    <div class="header-top">
+      <div class="logo-area">
+        <h1>HyperDrop</h1>
+        <span class="tagline">Multilingual AI Voice Delivery Exception Agent</span>
+      </div>
+      <div class="ws-status" id="wsStatus">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="statusText">Connecting...</span>
+      </div>
+    </div>
+
+    <!-- Live KPI Strip -->
+    <div class="kpi-strip">
+      <div class="kpi-card">
+        <div class="kpi-label">Avg Resolution Time</div>
+        <div class="kpi-value" id="kpiResolution">0.0s</div>
+        <div class="kpi-sub">Target: &lt; 45s</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Relay Translation Latency</div>
+        <div class="kpi-value" id="kpiLatency">0.0ms</div>
+        <div class="kpi-sub">Spoken turn avg</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Resolution Success Rate</div>
+        <div class="kpi-value" id="kpiSuccess">100%</div>
+        <div class="kpi-sub" id="kpiCounts">0 resolved / 0 total</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Cost per Exception</div>
+        <div class="kpi-value" id="kpiCost">₹0.00</div>
+        <div class="kpi-sub">Telephony + LLM</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Simulation Action Bar -->
+  <div class="controls-bar">
+    <span class="controls-label">Simulate Rider Exception:</span>
+    <button class="btn-sim" onclick="runScenario('S1')">
+      <span>🌐</span> S1 Language Relay
+    </button>
+    <button class="btn-sim" onclick="runScenario('S2')">
+      <span>🏢</span> S2 Busy Customer
+    </button>
+    <button class="btn-sim" onclick="runScenario('S3')">
+      <span>💳</span> S3 Cash On Delivery
+    </button>
+    <button class="btn-sim" onclick="runScenario('NO_ANSWER')">
+      <span>📵</span> No Answer Fallback
+    </button>
+  </div>
+
+  <!-- Main 3-Column Split View -->
+  <main>
+    <!-- Left: Customer Call Leg -->
+    <section class="pane" id="customerPane">
+      <div class="pane-header">
+        <div class="pane-title">
+          <span>📞</span> Customer Call Leg
+        </div>
+        <div class="meta-pill" id="customerMeta">Priya Sharma (Hindi)</div>
+      </div>
+      <div class="pane-body" id="customerTranscripts">
+        <div class="transcript-bubble bubble-system">
+          Waiting for call initiation...
+        </div>
+      </div>
+    </section>
+
+    <!-- Center: Order, Pipeline, Gate Token & Payment -->
+    <section class="center-pane">
+      <!-- Order Card -->
+      <div class="card-widget">
+        <h3>Active Order</h3>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
+          <strong id="orderItem" style="font-size: 1.05rem;">Smart Watch Pro</strong>
+          <span class="status-badge" id="orderTypeBadge" style="background:#374151; color:#93c5fd;">Prepaid</span>
+        </div>
+        <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom: 4px;" id="orderAddress">
+          Flat 402, Tower B, Prestige Palms
+        </div>
+        <div style="font-size:0.85rem; font-weight:600; color:#34d399;" id="orderValue">
+          ₹2,499.00
+        </div>
+      </div>
+
+      <!-- State Machine Timeline -->
+      <div class="card-widget">
+        <h3>Orchestrator State</h3>
+        <div class="timeline" id="timelineList">
+          <div class="timeline-step active" data-state="CREATED">
+            <span class="step-indicator"></span>
+            <span>CREATED</span>
+          </div>
+          <div class="timeline-step" data-state="CALLING_CUSTOMER">
+            <span class="step-indicator"></span>
+            <span>CALLING_CUSTOMER</span>
+          </div>
+          <div class="timeline-step" data-state="RESOLVED">
+            <span class="step-indicator"></span>
+            <span>RESOLVED</span>
+          </div>
+          <div class="timeline-step" data-state="CALLING_RIDER">
+            <span class="step-indicator"></span>
+            <span>CALLING_RIDER</span>
+          </div>
+          <div class="timeline-step" data-state="RIDER_CONFIRMED">
+            <span class="step-indicator"></span>
+            <span>RIDER_CONFIRMED</span>
+          </div>
+          <div class="timeline-step" data-state="HANDOVER_VERIFIED">
+            <span class="step-indicator"></span>
+            <span>HANDOVER_VERIFIED</span>
+          </div>
+          <div class="timeline-step" data-state="CLOSED">
+            <span class="step-indicator"></span>
+            <span>CLOSED</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- One-Time Gate Pass Token -->
+      <div class="card-widget">
+        <h3>One-Time Gate Pass (Safety Rule)</h3>
+        <div class="token-display">
+          <div class="token-code" id="tokenCode">------</div>
+          <div class="token-expiry" id="tokenExpiry">Permanent codes never read aloud. Token valid 15m.</div>
+        </div>
+      </div>
+
+      <!-- UPI Payment Status (COD) -->
+      <div class="card-widget">
+        <h3>UPI Payment Link & Webhook</h3>
+        <div class="payment-box">
+          <div>
+            <div style="font-size:0.82rem; font-weight:600;" id="paymentLabel">No active COD payment</div>
+            <div style="font-size:0.72rem; color:var(--text-muted);" id="paymentLinkText">Link sent via WhatsApp</div>
+          </div>
+          <span class="status-badge badge-pending" id="paymentBadge">N/A</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right: Rider Call Leg -->
+    <section class="pane" id="riderPane">
+      <div class="pane-header">
+        <div class="pane-title">
+          <span>🛵</span> Delivery Rider Leg
+        </div>
+        <div class="meta-pill" id="riderMeta">Raju Gowda (Kannada)</div>
+      </div>
+      <div class="pane-body" id="riderTranscripts">
+        <div class="transcript-bubble bubble-system">
+          Waiting for dispatch...
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
